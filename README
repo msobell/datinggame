@@ -1,0 +1,7 @@
+gradient descent
+
+information gain (use one or the other)
+from andrew w moore at CMU
+h(x) = entropy of x
+high entropy is boring = even distribution
+h(x) = -sum(p(j)log(p(j))/log(2)
