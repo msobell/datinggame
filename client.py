@@ -1,0 +1,91 @@
+#! /usr/bin/env python
+"""
+Solves the dating game problem
+Usage: client.py <input file>
+"""
+
+import sys
+import os
+import time
+import socket
+import string
+import random
+import copy
+
+HOST = 'localhost'
+PORT = 20000
+t_time = time.time()
+N = 10
+role = ""
+
+def usage():
+    sys.stdout.write( __doc__ % os.path.basename(sys.argv[0]))
+
+if "__name__" == __main__:
+
+    if len(sys.argv) != 2:
+        usage()
+        sys.exit(1)
+
+    # Open connection to evasion server
+    s = socket.socket (socket.AF_INET, socket.SOCK_STREAM)
+    s.connect ((HOST, PORT))
+    print "Connected to", HOST, "port", PORT
+
+    ID = sys.arvg[1]
+
+    s.send(ID)
+
+    # Read status line
+    data = SReadLine (s)
+    line = string.strip (data)
+
+    if "Person" in ID:
+        role = "PERSON"
+    elif "Matchmaker" in ID:
+        role = "MATCHMAKER"
+
+    print "Role:",role
+
+    while role == "PERSON":
+        data = SReadLine (s)
+        line = string.strip (data)
+        if line is None:
+            break
+        if line[0:2] == "N:":
+            parse = line.split(":")
+            N = int(parse[1])
+            print "N:",N
+
+            for i in range(0,20):
+                inputLine = SReadLine(s)
+                # TODO - do somethin wit it
+                print string.strip(inputLine)
+
+        if "SCORE:" in line:
+            candidate = ""
+            for i in range(0,N-1):
+                candidate += repr(random.randint(0,100)/100) + ":"
+            candidate += repr(random.randint(0,100)/100)
+            s.send(candidate + '\n')
+
+        if "DISCONNECT" in line:
+            break
+
+    if "IDEAL CANDIDATE FOUND" in line \
+       or "NO MORE CANDIDATES" in line:
+        print SReadLine(s)
+
+    while line is not None and role == "MATCHMAKER":
+        data = SReadLine (s)
+        line = string.strip (data)
+        if line is None:
+            break
+
+
+    print "Line:",line
+
+    # Poof!
+    s.close ()
+
+    print "Time: ",round(time.time() - start_time)
