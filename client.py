@@ -16,12 +16,31 @@ HOST = 'localhost'
 PORT = 20000
 t_time = time.time()
 N = 10
+file = "Person.txt"
 role = ""
+start_time = time.time()
 
 def usage():
     sys.stdout.write( __doc__ % os.path.basename(sys.argv[0]))
 
-if "__name__" == __main__:
+## From:
+## Charles J. Scheffold
+## cjs285@nyu.edudef SReadLine (conn):
+def SReadLine (conn):
+    data = ""
+    while True:
+        c = conn.recv(1)
+        if not c:
+            time.sleep(1)
+            break
+        data = data + c
+        if c == "\n" or c == "\r":
+            print data
+            break
+    return data
+
+
+if __name__ == "__main__":
 
     if len(sys.argv) != 2:
         usage()
@@ -32,9 +51,9 @@ if "__name__" == __main__:
     s.connect ((HOST, PORT))
     print "Connected to", HOST, "port", PORT
 
-    ID = sys.arvg[1]
+    ID = sys.argv[1]
 
-    s.send(ID)
+    s.send(ID + '\n')
 
     # Read status line
     data = SReadLine (s)
@@ -47,9 +66,24 @@ if "__name__" == __main__:
 
     print "Role:",role
 
-    while role == "PERSON":
+    while "PERSON" in role and line is not None:
+        print "Line:",line
+        if "N:" in line:
+            parse = line.split(":")
+            N = int(parse[1])
+            print "Read N:",N
+            s.send(file + '\n')
+            print "Sent attributes file"
+        if "ATTRIBUTES" in line:
+            if "DISCONNECT" in SReadLine(s):
+                break
         data = SReadLine (s)
         line = string.strip (data)
+
+    while "MATCHMAKER" in role:
+        data = SReadLine (s)
+        line = string.strip (data)
+        print "Line:",line
         if line is None:
             break
         if line[0:2] == "N:":
@@ -67,23 +101,16 @@ if "__name__" == __main__:
             for i in range(0,N-1):
                 candidate += repr(random.randint(0,100)/100) + ":"
             candidate += repr(random.randint(0,100)/100)
+            print "Candidate vector:",candidate
             s.send(candidate + '\n')
 
         if "DISCONNECT" in line:
             break
 
-    if "IDEAL CANDIDATE FOUND" in line \
-       or "NO MORE CANDIDATES" in line:
-        print SReadLine(s)
-
-    while line is not None and role == "MATCHMAKER":
-        data = SReadLine (s)
-        line = string.strip (data)
-        if line is None:
+        if "IDEAL CANDIDATE FOUND" in line \
+               or "NO MORE CANDIDATES" in line:
+            print SReadLine(s)
             break
-
-
-    print "Line:",line
 
     # Poof!
     s.close ()
