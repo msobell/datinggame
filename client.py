@@ -30,15 +30,17 @@ class InfoGain:
         estring = ""
         count = 0
         for v in self.vector:
-            estring += repr(v)
+            estring += v
             count += 1
-            if count < N:
+            if count < self.N:
                 estring += ":"
+        self.vector = []
         return estring
 
     def make_candidate(self):
-        for i in range(0,self.N-1):
-            self.vector.append( round(random.random(),2) )
+        for i in range(0,self.N):
+            # TODO - do somethin wit it
+            self.vector.append( "%.2f" % random.random() )
 
         return self.export()
 
@@ -130,8 +132,7 @@ if __name__ == "__main__":
             # SCORE:PREVIOUS CANDIDATE'S SCORE:TOTAL SCORE:# OF CANDIDATES USED
             candidate = ""
 
-            # TODO - do somethin wit it
-            candidate = make_candidate(N)
+            candidate = ig.make_candidate()
 
             print "Candidate vector:",candidate
             s.send(candidate + '\n')
