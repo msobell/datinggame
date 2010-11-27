@@ -20,6 +20,33 @@ file = "Person.txt"
 role = ""
 start_time = time.time()
 
+class InfoGain:
+    def __init__(self, N):
+        self.N = N
+        self.vector = []
+        self.input = []
+
+    def export(self):
+        estring = ""
+        count = 0
+        for v in self.vector:
+            estring += repr(v)
+            count += 1
+            if count < N:
+                estring += ":"
+        return estring
+
+    def make_candidate(self):
+        for i in range(0,self.N-1):
+            self.vector.append( round(random.random(),2) )
+
+        return self.export()
+
+    def printInput(self):
+        for i in self.input:
+            print i
+
+
 def usage():
     sys.stdout.write( __doc__ % os.path.basename(sys.argv[0]))
 
@@ -38,7 +65,6 @@ def SReadLine (conn):
             print data
             break
     return data
-
 
 if __name__ == "__main__":
 
@@ -90,17 +116,23 @@ if __name__ == "__main__":
             parse = line.split(":")
             N = int(parse[1])
             print "N:",N
+            ig = InfoGain(N)
 
             for i in range(0,20):
                 inputLine = SReadLine(s)
                 # TODO - do somethin wit it
-                print string.strip(inputLine)
+                ig.input.append( string.strip(inputLine) )
+
+            ig.printInput()
+            print "done printing from ig class"
 
         if "SCORE:" in line:
+            # SCORE:PREVIOUS CANDIDATE'S SCORE:TOTAL SCORE:# OF CANDIDATES USED
             candidate = ""
-            for i in range(0,N-1):
-                candidate += repr(random.randint(0,100)/100) + ":"
-            candidate += repr(random.randint(0,100)/100)
+
+            # TODO - do somethin wit it
+            candidate = make_candidate(N)
+
             print "Candidate vector:",candidate
             s.send(candidate + '\n')
 
