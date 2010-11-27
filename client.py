@@ -39,15 +39,55 @@ class InfoGain:
 
     def make_candidate(self):
         for i in range(0,self.N):
-            # TODO - do somethin wit it
-            self.vector.append( "%.2f" % random.random() )
+            self.vector.append( round(random.random(),2) )
+            # self.vector.append( "%.2f" % random.random() )
 
         return self.export()
+
+    def score_input(self):
+        """
+        Until some stopping condition 
+            Gt = vector of length n, initialized to all 0s
+            foreach candidate c
+                dotprod = ∑i xc,i*wt,i
+                diff = dotprod - yc
+                foreach gradient index i
+                    Gt,i =  Gt,i + diff * xc,i
+            foreach weight index i
+                wt+1,i = wt,i - η*Gt,i
+        """
+        self.make_candidate()
+        w = self.vector
+        for i in range(0,N):
+            w.append(random.random())
+        while True:
+            G = []*self.N
+            for c in self.input:
+                dotprod = dot_product(x,w)
+            
+        return 0
+
+    def find_eta(self):
+        """
+	bestCost = ∞
+	bestEta n= 0
+	foreach η in eta_range
+		currCost = 0
+		foreach candidate i
+			wi = train(X without xi, Y without yi)
+			currCost = currCost + C(wi)
+		if currCost < bestCost then 
+			bestCost = currCost
+			bestEta = η
+        """
+        return 0
 
     def printInput(self):
         for i in self.input:
             print i
 
+def dot_product(a, b):
+    return sum([a[i]*b[i] for i in range(len(a))])
 
 def usage():
     sys.stdout.write( __doc__ % os.path.basename(sys.argv[0]))
