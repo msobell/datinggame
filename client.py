@@ -16,7 +16,7 @@ HOST = 'localhost'
 PORT = 20000
 t_time = time.time()
 N = 10
-file = "Person.txt"
+file = "Person2.txt"
 role = ""
 start_time = time.time()
 
@@ -51,7 +51,7 @@ class InfoGain:
         candidate = self.score_input()
         return self.export(candidate)
 
-    def score_input(self):
+    def score_input(self,):
         """
         from http://cs.nyu.edu/courses/fall10/G22.2965-001/graddesc.html
 
@@ -75,23 +75,27 @@ class InfoGain:
             sign = 1
             if random.random() < 0.5:
                 sign = -1
-            self.weights.append(random.random()*sign)
+            if len(self.weights) <= N:
+                self.weights.append(random.random()*sign)
+            else:
+                print "Whoops weights too long"
         wsum = float('Inf')
         while abs(wsum - sum(self.weights)) > 0.0001:
             print "Weighting gradient:",abs(wsum - sum(self.weights))
+            print "Weights",self.weights,"Length:",len(self.weights)
             self.gradient = [0]*N
-            print "Self.candidates",self.candidates
+            # print "Self.candidates",self.candidates
             for c in self.candidates:
                 # c = score:v1:v2:...:vn
+                # print "C",c,"Length:",len(c)
                 dotprod = dot_product(c[1:],self.weights)
                 diff = dotprod - c[0]
+                # print "Gradient",self.gradient
+                # print "c",c
                 for i in range(0,len(self.gradient)):
                     self.gradient[i] += diff*c[i+1]
             wsum = sum(self.weights)
             for i in range(0,len(self.weights)):
-                print "i",i
-                print "Weights",self.weights
-                print "Gradient",self.gradient
                 self.weights[i] -= eta*self.gradient[i]
             
         return self.weights
@@ -112,7 +116,22 @@ class InfoGain:
 			bestEta = eta
         """
         
-        return 0.05
+        bestCost = float('Inf')
+        bestEta = 0
+        w = []
+        i = 0.0001
+        while i <= 0.1:
+            currCost = 0
+            j = 0
+            for c in self.candidates:
+                w[j] = self.score_input()
+                currCost += w[j]
+                j += 1
+            if currCost < bestCost:
+                bestCost = currCost
+                bestEta = eta
+            i += 0.0001
+        return bestEta
 
     def printInput(self):
         for i in self.input:
@@ -137,7 +156,6 @@ def SReadLine (conn):
             break
         data = data + c
         if c == "\n" or c == "\r":
-            print data
             break
     return data
 
@@ -199,6 +217,7 @@ if __name__ == "__main__":
                 t = string.strip(inputLine).split(":")
                 for i in range(0,len(t)):
                     t[i]=float(t[i])
+                print "Appending t",t
                 ig.input.append( t )
 
             ig.printInput()
