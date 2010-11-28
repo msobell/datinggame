@@ -23,68 +23,101 @@ start_time = time.time()
 class InfoGain:
     def __init__(self, N):
         self.N = N
-        self.vector = []
         self.input = []
+        # Gt (gradient) = gradient
+        self.gradient = []*N
+        # candidates = self.input
+        self.candidates = self.input
+        self.weights = []*N
 
-    def export(self):
+
+    def export(self,candidate):
         estring = ""
         count = 0
-        for v in self.vector:
-            estring += v
+        for v in candidate:
+            if v > 0:
+                estring += "1"
+            else:
+                estring += "0"
             count += 1
             if count < self.N:
                 estring += ":"
-        self.vector = []
         return estring
 
     def make_candidate(self):
-        for i in range(0,self.N):
-            self.vector.append( round(random.random(),2) )
+        # for i in range(0,self.N):
+            # self.vector.append( round(random.random(),2) )
             # self.vector.append( "%.2f" % random.random() )
-
-        return self.export()
+        candidate = self.score_input()
+        return self.export(candidate)
 
     def score_input(self):
         """
+        from http://cs.nyu.edu/courses/fall10/G22.2965-001/graddesc.html
+
         Until some stopping condition 
             Gt = vector of length n, initialized to all 0s
             foreach candidate c
-                dotprod = ∑i xc,i*wt,i
+                dotprod = sum(i xc,i*wt,i)
                 diff = dotprod - yc
                 foreach gradient index i
                     Gt,i =  Gt,i + diff * xc,i
             foreach weight index i
-                wt+1,i = wt,i - η*Gt,i
+                wt+1,i = wt,i - eta*Gt,i
         """
-        self.make_candidate()
-        w = self.vector
+        # Gt (gradient) = self.gradient
+        # candidates = self.candidates
+        # weights = self.weights
+        # initialize weights to be a random vector of lenght N
+        eta = self.find_eta() # small, < 0.1
+        self.weights = []
         for i in range(0,N):
-            w.append(random.random())
-        while True:
-            G = []*self.N
-            for c in self.input:
-                dotprod = dot_product(x,w)
+            sign = 1
+            if random.random() < 0.5:
+                sign = -1
+            self.weights.append(random.random()*sign)
+        wsum = float('Inf')
+        while abs(wsum - sum(self.weights)) > 0.0001:
+            print "Weighting gradient:",abs(wsum - sum(self.weights))
+            self.gradient = [0]*N
+            print "Self.candidates",self.candidates
+            for c in self.candidates:
+                # c = score:v1:v2:...:vn
+                dotprod = dot_product(c[1:],self.weights)
+                diff = dotprod - c[0]
+                for i in range(0,len(self.gradient)):
+                    self.gradient[i] += diff*c[i+1]
+            wsum = sum(self.weights)
+            for i in range(0,len(self.weights)):
+                print "i",i
+                print "Weights",self.weights
+                print "Gradient",self.gradient
+                self.weights[i] -= eta*self.gradient[i]
             
-        return 0
+        return self.weights
 
     def find_eta(self):
         """
-	bestCost = ∞
-	bestEta n= 0
-	foreach η in eta_range
+        from http://cs.nyu.edu/courses/fall10/G22.2965-001/graddesc.html
+
+	bestCost = inf.
+	bestEta n = 0
+	foreach eta in eta_range
 		currCost = 0
 		foreach candidate i
 			wi = train(X without xi, Y without yi)
 			currCost = currCost + C(wi)
 		if currCost < bestCost then 
 			bestCost = currCost
-			bestEta = η
+			bestEta = eta
         """
-        return 0
+        
+        return 0.05
 
     def printInput(self):
         for i in self.input:
             print i
+        print "done printing from ig class"
 
 def dot_product(a, b):
     return sum([a[i]*b[i] for i in range(len(a))])
@@ -163,15 +196,15 @@ if __name__ == "__main__":
             for i in range(0,20):
                 inputLine = SReadLine(s)
                 # TODO - do somethin wit it
-                ig.input.append( string.strip(inputLine) )
+                t = string.strip(inputLine).split(":")
+                for i in range(0,len(t)):
+                    t[i]=float(t[i])
+                ig.input.append( t )
 
             ig.printInput()
-            print "done printing from ig class"
 
         if "SCORE:" in line:
             # SCORE:PREVIOUS CANDIDATE'S SCORE:TOTAL SCORE:# OF CANDIDATES USED
-            candidate = ""
-
             candidate = ig.make_candidate()
 
             print "Candidate vector:",candidate
@@ -183,7 +216,7 @@ if __name__ == "__main__":
         if "IDEAL CANDIDATE FOUND" in line \
                or "NO MORE CANDIDATES" in line:
             print SReadLine(s)
-            break
+            sys.exit(0)
 
     # Poof!
     s.close ()
