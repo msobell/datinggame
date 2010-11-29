@@ -22,22 +22,24 @@ public class Server
 		}
 
 		
-
-		while(true) 
+		int playerCount = 0;
+		while(playerCount < 2) 
 		{
 			Socket socket = null;
 			try 
 			{  
 				socket = sSocket.accept();
-				DatGame dg = new DatGame(socket);
+				playerCount++;
+				DatGame dg = new DatGame(socket,sSocket);
 				Thread  thread = new Thread(dg);
 				thread.start();
 			} 
 			catch (IOException e) 
 			{
-				System.out.println("Accept failed: 20000");
+				System.out.println("Accept failed: 20000 or Person was disconnected or Matchmaker logged in early");
 				System.exit(-1);
 			} 
+
 		}  
 
 		

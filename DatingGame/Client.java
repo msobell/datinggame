@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.lang.Thread;
 
 
 public class Client 
@@ -55,6 +56,8 @@ public class Client
 					break;
 			}
 
+			if(inputLine.equals("TIME OUT"))
+				break;
 		}
 
 		while ((inputLine = in.readLine()) != null && ID.equals("Matchmaker")) 
@@ -74,7 +77,6 @@ public class Client
 
 			if(inputLine.startsWith("SCORE:")) 
 			{
-				
 				Random generator = new Random();
 				int temp;
 				String candVector;
@@ -96,16 +98,14 @@ public class Client
 				out.println("" + candVector);
 
 			}
-			if(inputLine.equals("DISCONNECT"))
+			if(inputLine.equals("DISCONNECT") || inputLine.equals("TIME OUT"))
 				break;
 	
 			if(inputLine.equals("IDEAL CANDIDATE FOUND") || inputLine.equals("NO MORE CANDIDATES")) 
 			{
-				inputLine = in.readLine(); 
+				inputLine = in.readLine(); //read in final score
 				System.out.println("" + inputLine);
-				break;
 			}
-			
 		}
 
 		out.close();

@@ -1,17 +1,23 @@
 Protocol
 --------
 
+
+
 Run server: java Server
 
 Client input		Server 
 
 Player 1:
 java Client Person	
+
 Person	
 			N:100 
 ./filename		
 			VALID ATTRIBUTES/INVALID ATTRIBUTES
+			
 			DISCONNECT
+			(or)
+			TIME OUT
 
 NOTE: Player 1 connects with ID 'Person'. Server sends the value of N and waits for
 the client to send the Person's attribute file name. Server verifies the
@@ -19,6 +25,7 @@ Person's attribute values.
 
 Player2:
 java Client Matchmaker
+
 Matchmaker
 			N:100
 			SCORE1:v1:v2: ... :vn
@@ -30,9 +37,9 @@ Matchmaker
 
 			SCORE:0:0:0
 v1:v2: ... :vn
-			SCORE:PREVIOUS CANDIDATE'S SCORE:TOTAL SCORE:# OF CANDIDATES USED
+			SCORE:PREVIOUS CANDIDATE'S SCORE:BEST SCORE:# OF CANDIDATES USED 
 v1:v2: ... :vn
-			SCORE:PREVIOUS CANDIDATE'S SCORE:TOTAL SCORE:# OF CANDIDATES USED
+			SCORE:PREVIOUS CANDIDATE'S SCORE:BEST SCORE:# OF CANDIDATES USED 
 
 			.
 			.
@@ -40,7 +47,7 @@ v1:v2: ... :vn
 			.
 			
 			IDEAL CANDIDATE FOUND/NO MORE CANDIDATES
-			FINAL SCORE:PREVIOUS CANDIDATE'S SCORE:TOTAL SCORE:# OF CANDIDATES USED
+			FINAL SCORE:PREVIOUS CANDIDATE'S SCORE:BEST SCORE:ID OF CANDIDATE WITH BEST SCORE		
 			DISCONNECT
 			(or)
 			TIME OUT

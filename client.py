@@ -16,7 +16,7 @@ HOST = 'localhost'
 PORT = 20000
 t_time = time.time()
 N = 10
-file = "Person.txt"
+file = "/home/max/heuristics/datinggame/Person.txt"
 role = ""
 start_time = time.time()
 
