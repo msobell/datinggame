@@ -16,7 +16,7 @@ HOST = 'localhost'
 PORT = 20000
 t_time = time.time()
 N = 10
-file = "Person2.txt"
+file = "/home/max/heuristics/datinggame/Person.txt"
 role = ""
 start_time = time.time()
 
@@ -51,25 +51,23 @@ class InfoGain:
         candidate = self.score_input()
         return self.export(candidate)
 
-    def score_input(self,candidates = self.candidates, weights = self.weights):
+    def score_input(self):
         """
         from http://cs.nyu.edu/courses/fall10/G22.2965-001/graddesc.html
 
         Until some stopping condition 
             Gt = vector of length n, initialized to all 0s
             foreach candidate c
-                dotprod = sum(i xc,i*wt,i)
+                dotprod = sum_i(xc[i]*wt[i])
                 diff = dotprod - yc
                 foreach gradient index i
                     Gt,i =  Gt,i + diff * xc,i
             foreach weight index i
                 wt+1,i = wt,i - eta*Gt,i
         """
-        # Gt (gradient) = self.gradient
-        # candidates = self.candidates
-        # weights = self.weights
         # initialize weights to be a random vector of lenght N
-        eta = self.find_eta() # small, < 0.1
+        candidates = self.candidates
+        eta = 0.015 #self.find_eta() # small, < 0.1
         weights = []
         for i in range(0,N):
             sign = 1
@@ -80,27 +78,39 @@ class InfoGain:
             else:
                 print "Whoops weights too long"
         wsum = float('Inf')
+        gradients = []
         while abs(wsum - sum(weights)) > 0.0001:
-            print "Weighting gradient:",abs(wsum - sum(weights))
+            print "Weighting gradient:",self.gradient
+            print "Weighting score:",wsum - sum(weights)
             print "Weights",weights,"Length:",len(weights)
             self.gradient = [0]*N
             # print "Self.candidates",self.candidates
             for c in candidates:
                 # c = score:v1:v2:...:vn
                 # print "C",c,"Length:",len(c)
-                dotprod = dot_product(c[1:],weights)
-                diff = dotprod - c[0]
-                # print "Gradient",self.gradient
-                # print "c",c
+                score = dot_product(c[1:],weights) # get the score
+                cost = score - c[0] # compute the difference
                 for i in range(0,len(self.gradient)):
-                    self.gradient[i] += diff*c[i+1]
+                    self.gradient[i] += cost*c[i+1]
+            scale = max(self.gradient)
+            if scale > 1:
+                for i in range(0,len(self.gradient)):
+                    self.gradient[i] /= scale
+                
             wsum = sum(weights)
             for i in range(0,len(weights)):
                 weights[i] -= eta*self.gradient[i]
+            # scale = max(weights)
+            # print "Scale:",scale
+            # print "Weights before:",weights
+            # if scale > 1:
+            #     for i in range(0,len(weights)):
+            #         weights[i] /= scale
             
-        return self.weights
+            # x = raw_input("press any key")
+        return weights
 
-    def find_eta(self, candidates = self.candidates, weights = self.weights):
+    def find_eta(self):
         """
         from http://cs.nyu.edu/courses/fall10/G22.2965-001/graddesc.html
 
@@ -115,7 +125,7 @@ class InfoGain:
 			bestCost = currCost
 			bestEta = eta
         """
-        
+        """
         bestCost = float('Inf')
         bestEta = 0
         w = []
@@ -136,11 +146,14 @@ class InfoGain:
             else:
                 i *= 2
         return bestEta
+        """
+        return 0.01
 
-    def cost(self, candidates = self.candidates, weights = self.weights):
-        total_cost = 0
-        for c in candidates:
-            total_cost += dot_product(candidates, weights) - 
+
+    # def cost(self, candidates = self.candidates, weights = self.weights):
+    #     total_cost = 0
+    #     for c in candidates:
+    #         total_cost += dot_product(candidates, weights) - 
 
     def printInput(self):
         for i in self.input:
