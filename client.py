@@ -28,13 +28,14 @@ class InfoGain:
         self.gradient = []*N
         # candidates = self.input
         self.candidates = self.input
+        self.candidate = []
         self.weights = []*N
 
 
-    def export(self,candidate):
+    def export(self):
         estring = ""
         count = 0
-        for v in candidate:
+        for v in self.candidate:
             if v > 0:
                 estring += "1"
             else:
@@ -45,11 +46,7 @@ class InfoGain:
         return estring
 
     def make_candidate(self):
-        # for i in range(0,self.N):
-            # self.vector.append( round(random.random(),2) )
-            # self.vector.append( "%.2f" % random.random() )
-        candidate = self.score_input()
-        return self.export(candidate)
+        self.candidate = self.score_input()
 
     def score_input(self):
         """
@@ -66,9 +63,10 @@ class InfoGain:
                 wt+1,i = wt,i - eta*Gt,i
         """
         # initialize weights to be a random vector of lenght N
-        candidates = self.candidates
-        eta = 0.015 #self.find_eta() # small, < 0.1
+        candidates = copy.deepcopy(self.candidates)
+        eta = 0.04 #self.find_eta() # small, < 0.1
         weights = []
+        gradient = []
         for i in range(0,N):
             sign = 1
             if random.random() < 0.5:
@@ -78,36 +76,38 @@ class InfoGain:
             else:
                 print "Whoops weights too long"
         wsum = float('Inf')
-        gradients = []
-        while abs(wsum - sum(weights)) > 0.0001:
-            print "Weighting gradient:",self.gradient
+        # we don't want the weights to be changing that drastically
+        # each round
+        this_eta = eta
+        while abs(wsum - sum(weights)) > 0.01:
+            if this_eta > 0.002:
+                # learn less and less...
+                this_eta -= 0.001
+            gradient = [0]*N
+            print "Weighting gradient:",gradient
             print "Weighting score:",wsum - sum(weights)
-            print "Weights",weights,"Length:",len(weights)
-            self.gradient = [0]*N
+            # print "Weights",weights,"Length:",len(weights)
             # print "Self.candidates",self.candidates
             for c in candidates:
                 # c = score:v1:v2:...:vn
-                # print "C",c,"Length:",len(c)
                 score = dot_product(c[1:],weights) # get the score
                 cost = score - c[0] # compute the difference
-                for i in range(0,len(self.gradient)):
-                    self.gradient[i] += cost*c[i+1]
-            scale = max(self.gradient)
+                # print "gradient:",gradient,"\nLength:",len(gradient)
+                # print "candidate:",c,"\nLength:",len(c)
+                for i in range(0,len(gradient)):
+                    gradient[i] += cost*c[i+1]
+            scale = max(gradient)
             if scale > 1:
-                for i in range(0,len(self.gradient)):
-                    self.gradient[i] /= scale
+                for i in range(0,len(gradient)):
+                    gradient[i] /= scale
                 
             wsum = sum(weights)
             for i in range(0,len(weights)):
-                weights[i] -= eta*self.gradient[i]
-            # scale = max(weights)
-            # print "Scale:",scale
-            # print "Weights before:",weights
-            # if scale > 1:
-            #     for i in range(0,len(weights)):
-            #         weights[i] /= scale
-            
+                weights[i] -= eta*gradient[i]
+
             # x = raw_input("press any key")
+        self.weights = copy.deepcopy(weights)
+        # print "returning weights:",weights
         return weights
 
     def find_eta(self):
@@ -207,6 +207,10 @@ if __name__ == "__main__":
 
     print "Role:",role
 
+    ig = None # global
+    candidate = []
+    prev_candidate = []
+
     while "PERSON" in role and line is not None:
         print "Line:",line
         if "N:" in line:
@@ -245,11 +249,26 @@ if __name__ == "__main__":
             ig.printInput()
 
         if "SCORE:" in line:
-            # SCORE:PREVIOUS CANDIDATE'S SCORE:TOTAL SCORE:# OF CANDIDATES USED
-            candidate = ig.make_candidate()
+            # SCORE:PREVIOUS CANDIDATE'S SCORE:BEST SCORE:# OF CANDIDATES USED
+            # FINAL SCORE:PREVIOUS CANDIDATE'S SCORE:BEST SCORE:ID OF CANDIDATE WITH BEST SCORE
+            prev_score = [float(line.split(":")[1])]
+            if len(prev_candidate) < N:
+                print "this candidate sucks."
+                print "prev candidate",prev_candidate
+                print "candidate",candidate
+            else:
+                # we're still learning!
+                ig.input.append( prev_score + prev_candidate)
 
-            print "Candidate vector:",candidate
-            s.send(candidate + '\n')
+            prev_candidate = copy.deepcopy(candidate) # make sure it's a new list
+            ig.make_candidate()
+            # print "ig weights",ig.weights
+            candidate = copy.deepcopy(ig.weights)
+            # print "candidate is now...",candidate
+            formatted_candidate = ig.export()
+            
+            print "Candidate vector:",formatted_candidate
+            s.send(formatted_candidate + '\n')
 
         if "DISCONNECT" in line:
             break
