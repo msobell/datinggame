@@ -16,7 +16,7 @@ HOST = 'localhost'
 PORT = 20000
 t_time = time.time()
 N = 10
-file = "/home/max/heuristics/datinggame/Person.txt"
+file = "Person2.txt"
 role = ""
 start_time = time.time()
 
@@ -51,7 +51,7 @@ class InfoGain:
         candidate = self.score_input()
         return self.export(candidate)
 
-    def score_input(self):
+    def score_input(self,candidates = self.candidates, weights = self.weights):
         """
         from http://cs.nyu.edu/courses/fall10/G22.2965-001/graddesc.html
 
@@ -70,33 +70,37 @@ class InfoGain:
         # weights = self.weights
         # initialize weights to be a random vector of lenght N
         eta = self.find_eta() # small, < 0.1
-        self.weights = []
+        weights = []
         for i in range(0,N):
             sign = 1
             if random.random() < 0.5:
                 sign = -1
-            self.weights.append(random.random()*sign)
+            if len(weights) <= N:
+                weights.append(random.random()*sign)
+            else:
+                print "Whoops weights too long"
         wsum = float('Inf')
-        while abs(wsum - sum(self.weights)) > 0.0001:
-            print "Weighting gradient:",abs(wsum - sum(self.weights))
+        while abs(wsum - sum(weights)) > 0.0001:
+            print "Weighting gradient:",abs(wsum - sum(weights))
+            print "Weights",weights,"Length:",len(weights)
             self.gradient = [0]*N
-            print "Self.candidates",self.candidates
-            for c in self.candidates:
+            # print "Self.candidates",self.candidates
+            for c in candidates:
                 # c = score:v1:v2:...:vn
-                dotprod = dot_product(c[1:],self.weights)
+                # print "C",c,"Length:",len(c)
+                dotprod = dot_product(c[1:],weights)
                 diff = dotprod - c[0]
+                # print "Gradient",self.gradient
+                # print "c",c
                 for i in range(0,len(self.gradient)):
                     self.gradient[i] += diff*c[i+1]
-            wsum = sum(self.weights)
-            for i in range(0,len(self.weights)):
-                print "i",i
-                print "Weights",self.weights
-                print "Gradient",self.gradient
-                self.weights[i] -= eta*self.gradient[i]
+            wsum = sum(weights)
+            for i in range(0,len(weights)):
+                weights[i] -= eta*self.gradient[i]
             
         return self.weights
 
-    def find_eta(self):
+    def find_eta(self, candidates = self.candidates, weights = self.weights):
         """
         from http://cs.nyu.edu/courses/fall10/G22.2965-001/graddesc.html
 
@@ -112,7 +116,31 @@ class InfoGain:
 			bestEta = eta
         """
         
-        return 0.05
+        bestCost = float('Inf')
+        bestEta = 0
+        w = []
+        i = 0.0001
+        while i <= 0.1:
+            currCost = 0
+            j = 0
+            for c in candidates:
+                w = self.score_input(c[:j]+c[j+1:],\
+                                     weights[:j]+weights[j+1:])
+                currCost += w
+                j += 1
+            if currCost < bestCost:
+                bestCost = currCost
+                bestEta = eta
+            if i > 0.01:
+                i += 0.01
+            else:
+                i *= 2
+        return bestEta
+
+    def cost(self, candidates = self.candidates, weights = self.weights):
+        total_cost = 0
+        for c in candidates:
+            total_cost += dot_product(candidates, weights) - 
 
     def printInput(self):
         for i in self.input:
@@ -137,7 +165,6 @@ def SReadLine (conn):
             break
         data = data + c
         if c == "\n" or c == "\r":
-            print data
             break
     return data
 
@@ -199,6 +226,7 @@ if __name__ == "__main__":
                 t = string.strip(inputLine).split(":")
                 for i in range(0,len(t)):
                     t[i]=float(t[i])
+                print "Appending t",t
                 ig.input.append( t )
 
             ig.printInput()
